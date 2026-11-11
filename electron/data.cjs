@@ -19,7 +19,7 @@ function number(v){return v===undefined||v===''||!Number.isFinite(Number(v))?nul
 function merge(region, realm, commodities) {
   const r=new Map(region.map(x=>[x.itemId,x])); const local=new Map(realm.map(x=>[x.itemId,{...x,scope:'Realm'}]));
   for(const x of commodities)local.set(x.itemId,{...x,scope:'Region commodity'});
-  return [...new Set([...r.keys(),...local.keys()])].map(id=>{const a=r.get(id)||{},b=local.get(id)||{};return {id:`i:${id}`,itemId:id,name:a.name||b.name||`Item ${id}`,minBuyout:number(b.minBuyout),quantity:number(b.quantity),marketValue:number(b.marketValue),saleAvg:number(a.avgSalePrice),saleRate:number(a.saleRate),soldPerDay:number(a.soldPerDay),scope:b.scope||'No realm listing',realmUpdatedAt:b.updatedAt||null,regionUpdatedAt:a.updatedAt||null};});
+  return [...new Set([...r.keys(),...local.keys()])].map(id=>{const a=r.get(id)||{},b=local.get(id)||{};return {id:`i:${id}`,itemId:id,name:a.name||b.name||`Item ${id}`,minBuyout:number(b.minBuyout),quantity:number(b.quantity),marketValue:number(b.marketValue),historical:number(b.historical),recent:number(b.recent),regionMarketValue:number(a.marketValue),regionHistorical:number(a.historical),saleAvg:number(a.avgSalePrice),saleRate:number(a.saleRate),soldPerDay:number(a.soldPerDay),scope:b.scope||'No realm listing',realmUpdatedAt:b.updatedAt||null,regionUpdatedAt:a.updatedAt||null};});
 }
 function parseGroup(text){
  if(text.trim().startsWith('!TSM'))throw Error('Compressed !TSM strings are not supported yet. Use a plain TSM item string (i:123,i:456) or item IDs.');

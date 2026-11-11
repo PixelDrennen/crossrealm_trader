@@ -4,14 +4,23 @@ const fs=require('node:fs/promises');const path=require('node:path');
 const {DataService,parseGroup,exportGroup,parseCSV}=require('./data.cjs');
 const {CatalogService,normalizeState,validState}=require('./catalog.cjs');
 const {DealScanner}=require('./deals.cjs');
+const {LocalDataService}=require('./local-data.cjs');
 let win,service;let updateStatus={message:'Checking for updates…',ready:false};
 const statePath=()=>path.join(app.getPath('userData'),'settings.json');
 const defaults={region:'us',realms:['gurubashi','area-52','stormrage'],defaultRealm:'gurubashi',favorites:[],lists:[]};
 async function readState(){try{return normalizeState({...defaults,...JSON.parse(await fs.readFile(statePath(),'utf8'))});}catch{return normalizeState(structuredClone(defaults));}}
+let stateWrites=Promise.resolve();
+function writeState(state){const write=async()=>{const tmp=statePath()+'.tmp';await fs.writeFile(tmp,JSON.stringify(state,null,2));await fs.rename(tmp,statePath());};stateWrites=stateWrites.then(write,write);return stateWrites;}
 function update(message,ready=false){updateStatus={message,ready};win?.webContents.send('update-status',updateStatus);}
 app.whenReady().then(async()=>{
  service=new DataService(path.join(app.getPath('userData'),'cache'));
  const catalog=new CatalogService(path.join(app.getPath('userData'),'catalog'));
+ const local=new LocalDataService(app.getPath('userData'));
+ const syncLocal=async()=>{const state=await readState();const directory=require('./catalog/realms.json');return local.sync(directory,state.wowPaths||[]);};
+ ipcMain.handle('local:sync',syncLocal);
+ ipcMain.handle('local:choose',async()=>{const result=await dialog.showOpenDialog(win,{title:'Choose World of Warcraft, _retail_, AddOns, or WTF folder',properties:['openDirectory']});if(result.canceled)return null;const state=await readState();state.wowPaths=[...new Set([...(state.wowPaths||[]),result.filePaths[0]])];await writeState(state);return syncLocal();});
+ ipcMain.handle('items:presentation',async(_,ids)=>{if(!Array.isArray(ids)||ids.length>200)throw Error('Too many items');let cursor=0;const results=[];await Promise.all(Array.from({length:4},async()=>{while(cursor<ids.length){const id=ids[cursor++];results.push(await catalog.presentation(id));}}));return results;});
+ ipcMain.handle('item:details',async(_,id)=>{const [presentation,meta]=await Promise.all([catalog.presentation(id,true),catalog.item(id).catch(e=>({metadataError:e.message}))]);return {...presentation,...meta,tooltip:presentation.tooltip};});
  const scanner=new DealScanner(service,catalog,s=>win?.webContents.send('deals-progress',s));
  ipcMain.handle('catalog:get',()=>catalog.get());
  ipcMain.handle('item:metadata',(_,id)=>catalog.item(id));
@@ -19,7 +28,7 @@ app.whenReady().then(async()=>{
  ipcMain.handle('deals:cancel',()=>scanner.cancel());
  ipcMain.handle('source:open',(_,id)=>{if(!/^[a-z0-9]{26}$/.test(id))throw Error('Invalid group');return shell.openExternal(`https://tradeskillmaster.com/retail/groups/${id}`);});
  ipcMain.handle('state:get',readState);
- ipcMain.handle('state:save',async(_,state)=>{if(!validState(state))throw Error('Invalid settings');const tmp=statePath()+'.tmp';await fs.writeFile(tmp,JSON.stringify(state,null,2));await fs.rename(tmp,statePath());return true;});
+ ipcMain.handle('state:save',async(_,state)=>{if(!validState(state))throw Error('Invalid settings');const current=await readState();state.wowPaths=current.wowPaths||state.wowPaths||[];await writeState(state);return true;});
  ipcMain.handle('data:load',(_,region,realm,force)=>service.load(region,realm,!!force));
  ipcMain.handle('item:compare',async(_,key,id)=>{if(!/^(us|eu|kr|tw):[a-z0-9-]+$/.test(key)||!/^\d+$/.test(String(id)))throw Error('Invalid comparison');const [region,slug]=key.split(':');const data=await service.load(region,slug,false);return {item:data.items.find(i=>i.itemId===String(id))||null,offline:data.offline,errors:data.errors};});
  ipcMain.handle('group:parse',(_,text)=>parseGroup(text));

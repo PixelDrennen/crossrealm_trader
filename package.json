@@ -1,6 +1,6 @@
 {
   "name": "crossrealm-trader",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "World of Warcraft Retail realm price comparison using TSM public data",
   "author": "PixelDrennen",
   "license": "MIT",
@@ -12,7 +12,8 @@
     "dist:dir": "electron-builder --linux --dir"
   },
   "dependencies": {
-    "electron-updater": "^6.6.2"
+    "electron-updater": "^6.6.2",
+    "luaparse": "^0.3.1"
   },
   "devDependencies": {
     "electron": "^39.0.0",
