@@ -24,7 +24,7 @@ app.whenReady().then(async()=>{
  const scanner=new DealScanner(service,catalog,s=>win?.webContents.send('deals-progress',s));
  ipcMain.handle('catalog:get',()=>catalog.get());
  ipcMain.handle('item:metadata',(_,id)=>catalog.item(id));
- ipcMain.handle('deals:scan',(_,config)=>scanner.scan(config));
+ ipcMain.handle('deals:scan',async(_,config)=>{if(config.buyMode==='characters')config={...config,characterRealms:(await syncLocal()).characterRealms};return scanner.scan(config);});
  ipcMain.handle('deals:cancel',()=>scanner.cancel());
  ipcMain.handle('source:open',(_,id)=>{if(!/^[a-z0-9]{26}$/.test(id))throw Error('Invalid group');return shell.openExternal(`https://tradeskillmaster.com/retail/groups/${id}`);});
  ipcMain.handle('state:get',readState);
