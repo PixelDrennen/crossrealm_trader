@@ -19,8 +19,8 @@ app.whenReady().then(async()=>{
  const syncLocal=async()=>{const state=await readState();const directory=require('./catalog/realms.json');return local.sync(directory,state.wowPaths||[]);};
  ipcMain.handle('local:sync',syncLocal);
  ipcMain.handle('local:choose',async()=>{const result=await dialog.showOpenDialog(win,{title:'Choose World of Warcraft, _retail_, AddOns, or WTF folder',properties:['openDirectory']});if(result.canceled)return null;const state=await readState();state.wowPaths=[...new Set([...(state.wowPaths||[]),result.filePaths[0]])];await writeState(state);return syncLocal();});
- ipcMain.handle('items:presentation',async(_,ids)=>{if(!Array.isArray(ids)||ids.length>200)throw Error('Too many items');let cursor=0;const results=[];await Promise.all(Array.from({length:4},async()=>{while(cursor<ids.length){const id=ids[cursor++];results.push(await catalog.presentation(id));}}));return results;});
- ipcMain.handle('item:details',async(_,id)=>{const [presentation,meta]=await Promise.all([catalog.presentation(id,true),catalog.item(id).catch(e=>({metadataError:e.message}))]);return {...presentation,...meta,tooltip:presentation.tooltip};});
+ ipcMain.handle('items:presentation',async(_,ids)=>{if(!Array.isArray(ids)||ids.length>200)throw Error('Too many items');let cursor=0;const results=[];await Promise.all(Array.from({length:4},async()=>{while(cursor<ids.length){const id=ids[cursor++];const presentation=await catalog.presentation(id);results.push(presentation);win?.webContents.send('item-presentation',presentation);}}));return results;});
+ ipcMain.handle('item:details',(_,id)=>catalog.details(id));
  const scanner=new DealScanner(service,catalog,s=>win?.webContents.send('deals-progress',s));
  ipcMain.handle('catalog:get',()=>catalog.get());
  ipcMain.handle('item:metadata',(_,id)=>catalog.item(id));
