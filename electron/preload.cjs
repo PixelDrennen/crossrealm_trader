@@ -1,0 +1,3 @@
+const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('trader',{
+ getState:()=>ipcRenderer.invoke('state:get'),saveState:s=>ipcRenderer.invoke('state:save',s),load:(r,s,f)=>ipcRenderer.invoke('data:load',r,s,f),parseGroup:t=>ipcRenderer.invoke('group:parse',t),copyGroup:ids=>ipcRenderer.invoke('group:copy',ids),importLedger:()=>ipcRenderer.invoke('ledger:import'),getLedger:()=>ipcRenderer.invoke('ledger:get'),getUpdate:()=>ipcRenderer.invoke('update:get'),checkUpdate:()=>ipcRenderer.invoke('update:check'),installUpdate:()=>ipcRenderer.invoke('update:install'),openRelease:()=>ipcRenderer.invoke('release:open'),onUpdate:fn=>ipcRenderer.on('update-status',(_,s)=>fn(s))});

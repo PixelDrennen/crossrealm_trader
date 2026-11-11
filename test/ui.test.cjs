@@ -1,0 +1,15 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const {JSDOM}=require('jsdom');const {parseGroup}=require('../electron/data.cjs');
+const delay=()=>new Promise(r=>setTimeout(r,5));
+test('UI retains search on realm switch; persists favorites and saved lists; exports TSM',async()=>{
+ const dom=new JSDOM(fs.readFileSync('src/index.html','utf8'),{runScripts:'outside-only',url:'https://local.invalid'});const w=dom.window;const d=w.document;let stored;let copied;
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
+ const data={items:[{id:'i:123',itemId:'123',name:'Test sword',minBuyout:1234500,saleAvg:2000000,saleRate:.033,soldPerDay:1.2,scope:'Realm'},{id:'i:456',itemId:'456',name:'Herb',minBuyout:10000,saleAvg:20000,saleRate:0,soldPerDay:0,scope:'Region commodity'}],offline:false,errors:[]};
+ w.trader={getState:async()=>({region:'us',realms:['gurubashi','area-52'],defaultRealm:'gurubashi',favorites:[],lists:[]}),saveState:async s=>{stored=JSON.parse(JSON.stringify(s));},load:async()=>data,getLedger:async()=>[],getUpdate:async()=>({message:'Current',ready:false}),onUpdate:()=>{},parseGroup:async s=>parseGroup(s),copyGroup:async ids=>copied=ids.join(',')};
+ w.eval(fs.readFileSync('src/app.js','utf8'));await delay();assert.equal(d.querySelectorAll('#rows tr').length,2);
+ const search=d.querySelector('#search');search.value='sword';search.dispatchEvent(new w.Event('input'));assert.equal(d.querySelectorAll('#rows tr').length,1);
+ d.querySelector('[data-fav]').click();await delay();assert.deepEqual(stored.favorites,['i:123']);d.querySelector('[data-view="favorites"]').click();assert.equal(d.querySelectorAll('#rows tr').length,1);
+ d.querySelector('[data-realm="area-52"]').click();await delay();assert.equal(search.value,'sword');assert.equal(d.querySelector('#active-realm').textContent,'Area 52');
+ d.querySelector('#new-list').click();d.querySelector('#list-name').value='Swords';d.querySelector('#list-items').value='i:123';d.querySelector('#modal-form').dispatchEvent(new w.Event('submit',{cancelable:true}));await delay();assert.equal(d.querySelector('#view-title').textContent,'Swords');assert.equal(stored.lists[0].items[0],'i:123');d.querySelector('#export-list').click();await delay();assert.equal(copied,'i:123');
+ d.querySelector('#settings').click();d.querySelector('#realm-slugs').value='gurubashi\nstormrage';d.querySelector('#home-realm').value='stormrage';d.querySelector('#modal-form').dispatchEvent(new w.Event('submit',{cancelable:true}));await delay();assert.equal(stored.defaultRealm,'stormrage');assert.equal(d.querySelector('[data-realm]').dataset.realm,'stormrage');
+ dom.window.close();
+});

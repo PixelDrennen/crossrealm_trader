@@ -1,0 +1,56 @@
+{
+  "name": "crossrealm-trader",
+  "version": "0.1.0",
+  "description": "World of Warcraft Retail realm price comparison using TSM public data",
+  "author": "PixelDrennen",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "dist": "electron-builder --linux AppImage rpm",
+    "dist:dir": "electron-builder --linux --dir"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12",
+    "jsdom": "^31.0.0"
+  },
+  "build": {
+    "appId": "net.pixeldrennen.crossrealmtrader",
+    "productName": "Crossrealm Trader",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "rpm"
+      ],
+      "category": "Game",
+      "maintainer": "PixelDrennen",
+      "icon": "build/icon.png",
+      "artifactName": "Crossrealm-Trader-${version}-${arch}.${ext}",
+      "desktop": {
+        "entry": {
+          "Comment": "Compare WoW Retail auction prices across realms"
+        }
+      },
+      "desktopName": "crossrealm-trader.desktop",
+      "syncDesktopName": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "PixelDrennen",
+        "repo": "crossrealm_trader"
+      }
+    ]
+  }
+}
