@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node --check src/app.js
+      - run: python3 -m unittest discover -s test -p "*_test.py"
+      - run: bash -n install.sh
   release:
     if: github.event_name != 'pull_request'
     needs: test
@@ -48,6 +50,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - if: steps.version.outputs.exists == 'false'
         run: npm run dist -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Attach installer and verified assets
+        if: steps.version.outputs.exists == 'false'
+        run: |
+          cp install.sh dist/install.sh
+          cp build/icon.png dist/crossrealm-trader.png
+          cd dist
+          sha256sum *.AppImage *.rpm crossrealm-trader.png install.sh > SHA256SUMS
+          gh release upload "${{ steps.version.outputs.tag }}" install.sh crossrealm-trader.png SHA256SUMS --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish release

@@ -4,16 +4,17 @@ A Linux desktop browser for **WoW Retail realm pricing**, powered by [TSM's publ
 
 ## Install on Fedora
 
-Download the **AppImage** from [Releases](https://github.com/PixelDrennen/crossrealm_trader/releases/latest). This is the recommended distribution for automatic updates.
+Run the installer as your normal user (no sudo):
 
 ```bash
-mkdir -p ~/.local/opt/crossrealm-trader
-mv ~/Downloads/Crossrealm-Trader-*.AppImage ~/.local/opt/crossrealm-trader/
-chmod +x ~/.local/opt/crossrealm-trader/*.AppImage
-~/.local/opt/crossrealm-trader/*.AppImage
+curl -fL https://github.com/PixelDrennen/crossrealm_trader/releases/latest/download/install.sh -o crossrealm-install.sh && bash crossrealm-install.sh
 ```
 
-If Fedora reports missing libfuse.so.2, install `sudo dnf install fuse-libs`. Keep the AppImage in a writable folder: updates download automatically, install on exit, and can be applied with the in-app restart button. Updates are checked on startup and every four hours. Never launch it with sudo or disable its sandbox.
+It downloads the latest x86_64 AppImage, verifies release SHA-256 checksums, installs it permanently under `~/.local/opt/crossrealm-trader`, and adds **Crossrealm Trader** to Fedora/KDE's application menu with its icon. The launcher is also available at `~/.local/bin/crossrealm-trader`. It automatically uses extract-and-run mode if FUSE 2 is unavailable; it does not need sudo or disable Electron's sandbox.
+
+The installed AppImage has a stable filename in a writable directory so automatic updates preserve the menu launcher. Updates download automatically, install on exit, and can be applied with the in-app restart button. Updates are checked on startup and every four hours. Close the app before rerunning the installer. Rerunning updates the installation without removing saved settings, favorites, lists or the ledger. You can remove the downloaded installer script afterward.
+
+To uninstall, delete `~/.local/opt/crossrealm-trader`, `~/.local/bin/crossrealm-trader`, `~/.local/share/applications/crossrealm-trader.desktop`, and `~/.local/share/icons/hicolor/512x512/apps/crossrealm-trader.png` (use your `XDG_DATA_HOME` location for the last two when configured). Settings remain in `~/.config/crossrealm-trader` unless you separately remove them.
 
 An RPM is also built for conventional `sudo dnf install ./Crossrealm-Trader-*.rpm` installation. In this version RPM users download newer RPMs from Releases; use AppImage for automatic updates.
 
