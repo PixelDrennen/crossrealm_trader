@@ -42,7 +42,6 @@
           "Comment": "Compare WoW Retail auction prices across realms"
         }
       },
-      "desktopName": "crossrealm-trader.desktop",
       "syncDesktopName": true
     },
     "publish": [
@@ -52,5 +51,6 @@
         "repo": "crossrealm_trader"
       }
     ]
-  }
+  },
+  "desktopName": "crossrealm-trader.desktop"
 }
